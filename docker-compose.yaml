@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: varu
+      MYSQL_DATABASE: curd_app
+      MYSQL_USER: appuser
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./api
+    container_name: backend-svc
+    environment:
+      DB_HOST: mysql
+      DB_USER: appuser
+      DB_PASSWORD: varu
+      DB_NAME: curd_app
+      JWT_SECRET: threetierapp
+      RESET_ADMIN_PASS: 'true'
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  frontend:
+    build: ./client
+    container_name: frontend-svc
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks: 
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
