@@ -57,5 +57,51 @@ pipeline {
                sh ''' trivy fs . --format table -o trivy-report.html '''
           }
        }
+
+       stage('Build Frontend Docker Image') {
+            steps {
+                dir('client') {
+                    sh 'docker build -t varshithakj/frontend:latest .'
+                    sh 'trivy image --format table -o frontend-image-report.html varshithakj/frontend:latest '
+
+                }
+            }
+        }
+
+        stage('Push Frontend Image') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-cred', url: '']) {
+                    sh 'docker push varshithakj/frontend:latest'
+                }
+            } 
+        }
+
+
+        stage('Build backeend Docker Image') {
+            steps {
+                dir('api') {
+                    sh 'docker build -t varshithakj/backend:latest .'
+                    sh 'trivy image --format table -o backend-image-report.html varshithakj/backend:latest '
+
+                }
+            }
+        }
+
+        stage('Push backend Image') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-cred', url: '']) {
+                    sh 'docker push varshithakj/backend:latest'
+                }
+            } 
+        }
+
+        stage('Docker Deploy via Compose') {
+            steps {
+                script {
+                    sh 'docker compose up -d'
+                }
+            }
+        }
+                 
     }
 }
