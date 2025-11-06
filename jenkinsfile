@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    tools {
+        nodejs 'nodejs-23'
+    }
+    environment{
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+    stages {
+        stage('git checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/varshithakjayappa/three-tier-ci-cd-pipeline.git'
+            }
+        }
+        
+        stage('frontend compile'){
+            steps{
+                dir('client') {
+                 sh 'find . -name "*.js" -exec node --check {} +'
+               }
+            }
+        }
+        
+        stage('backend compile'){
+            steps{
+                dir('api'){
+                 sh 'find . -name "*.js" -exec node --check {} +'
+                }
+            }
+        }
+        
+        stage('gitleaks'){
+            steps{
+               sh 'gitleaks detect --source ./client --exit-code 1' 
+               sh 'gitleaks detect --source ./api --exit-code 1' 
+            }
+        }  
+        
+        stage('sonarqube analysis'){
+           steps{
+               withSonarQubeEnv('Sonarqube') {
+                sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=nodejs-project -Dsonar.projectKey=nodejs-project '''
+               }
+            }
+         }
+         
+       stage('quality-gate check'){
+           steps{
+               timeout(time: 1, unit: 'HOURS') {
+                  waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-three-tier'
+              }
+           }
+       }   
+       
+       stage('trivy fs scan'){
+           steps{
+               sh ''' trivy fs . --format table -o trivy-report.html '''
+          }
+       }
+    }
+}
