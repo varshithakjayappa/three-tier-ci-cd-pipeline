@@ -9,6 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: varu
       MYSQL_DATABASE: curd_app
       MYSQL_USER: appuser
+      MYSQL_PASSWORD: varu 
       MYSQL_ROOT_HOST: "%"
     volumes:
       - mysql-data:/var/lib/mysql

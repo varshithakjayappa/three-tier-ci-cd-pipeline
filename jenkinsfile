@@ -61,9 +61,9 @@ pipeline {
        stage('Build Frontend Docker Image') {
             steps {
                 dir('client') {
-                    sh 'docker build -t varshithakj/frontend:latest .'
-                    sh 'trivy image --format table -o frontend-image-report.html varshithakj/frontend:latest '
-
+                    sh ''' docker build -t varshithakj/frontend:latest .
+                    trivy image --format table -o frontend-image-report.html varshithakj/frontend:latest 
+                    '''
                 }
             }
         }
@@ -80,9 +80,9 @@ pipeline {
         stage('Build backeend Docker Image') {
             steps {
                 dir('api') {
-                    sh 'docker build -t varshithakj/backend:latest .'
-                    sh 'trivy image --format table -o backend-image-report.html varshithakj/backend:latest '
-
+                    sh ''' docker build -t varshithakj/backend:latest .'
+                     trivy image --format table -o backend-image-report.html varshithakj/backend:latest 
+                    '''
                 }
             }
         }
@@ -102,6 +102,7 @@ pipeline {
                 }
             }
         }
+
                  
     }
 }
